@@ -1,0 +1,17 @@
+{
+  "symbols": {
+    "AAPL": {
+      "start": null,
+      "alerted": false
+    },
+    "VWRL.DE": {
+      "start": null,
+      "alerted": false
+    },
+    "A1E0HS": {
+      "start": null,
+      "alerted": false
+    }
+  },
+  "threshold": 5.0
+}
