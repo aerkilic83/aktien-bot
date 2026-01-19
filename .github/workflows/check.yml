@@ -1,8 +1,10 @@
 name: Aktien Alarm
 on:
   schedule:
-    - cron: '*/30 * * * *' # Alle 30 Minuten (nur während der Börsenzeit sinnvoll)
-  workflow_dispatch:      # Erlaubt dir, den Bot manuell per Klick zu testen
+    - cron: '*/30 * * * *' # Alle 30 Minuten (nur während der Börsenzeit 
+sinnvoll)
+  workflow_dispatch:      # Erlaubt dir, den Bot manuell per Klick zu 
+testen
 
 jobs:
   run-bot:
