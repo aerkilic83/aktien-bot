@@ -2,25 +2,24 @@ name: Aktien Alarm
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
-  workflow_dispatch:
+    - cron: '*/30 * * * *' # Alle 30 Minuten
+  workflow_dispatch:      # Erlaubt manuelles Testen
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     steps:
-      - name: Code auschecken
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Python installieren
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Bibliotheken installieren
-        run: pip install requests beautifulsoup4
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Skript ausführen
+      - name: Run Script
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
