@@ -1,6 +1,8 @@
 name: Aktien Alarm
 
 on:
+  schedule:
+    - cron: "*/5 * * * *"   # alle 5 Minuten
   push:
     branches: [ main ]
   workflow_dispatch:
