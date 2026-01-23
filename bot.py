@@ -20,7 +20,8 @@ AKTIEN_DATEN = {
     "918422": ("NVIDIA", "US67066G1040"),
     "871460": ("Oracle", "US68389X1054"),
     "A2QA4J": ("Palantir", "US69608A1088"),
-    "A0NC7B": ("Visa", "US92826C8394")
+    "A0NC7B": ("Visa", "US92826C8394"),
+    "581005" ("Deutsche Boerse", "DE0005810055") 
 }
 
 def load_old_prices():
