@@ -9,7 +9,6 @@ from datetime import datetime
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Schwellenwert für Momentum (z.B. 0.5%)
 LIMIT_PERCENT = 0.5  
 DB_FILE = "last_prices.json"
 
@@ -26,8 +25,11 @@ AKTIEN_DATEN = {
 
 def load_old_prices():
     if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(DB_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {}
     return {}
 
 def save_prices(prices):
@@ -35,24 +37,29 @@ def save_prices(prices):
         json.dump(prices, f)
 
 def send_telegram(msg):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID, 
-        "text": msg, 
-        "parse_mode": "HTML",
-        "disable_notification": False 
-    }
-    requests.post(url, data=payload)
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"}
+    try:
+        requests.post(url, data=payload, timeout=10)
+    except:
+        print("Fehler beim Senden an Telegram")
 
 def get_numbers(soup):
-    container = soup.select_one(".price, .mono, .instrument-price")
+    # Sucht in den typischen L&S Preis-Containern
+    container = soup.select_one(".price, .mono, .instrument-price, #pro_kurs")
     if container:
-        text = container.get_text(strip=True).replace("€", "").replace("%", "")
-        text = re.sub(r'\.(?=\d+,\d+)', '', text)
-        return re.findall(r"[+-]?\d+,\d+", text)
+        text = container.get_text(strip=True)
+        # Regex sucht nach Zahlenformat: 1.234,56 oder 123,456
+        # Wir entfernen Tausenderpunkte, falls vorhanden
+        text = text.replace(".", "").replace(" ", "")
+        match = re.search(r"(\d+,\d+)", text)
+        if match:
+            return match.group(1)
     return None
 
-# 1. Alte Kurse laden
+# --- MAIN ---
 old_prices = load_old_prices()
 new_prices = old_prices.copy()
 zeit = datetime.now().strftime("%H:%M:%S")
@@ -61,42 +68,44 @@ print(f"🚀 Check gestartet um {zeit}...")
 
 for wkn, info in AKTIEN_DATEN.items():
     name, isin = info
-    url = f"https://www.ls-tc.de/de/aktie/{wkn}"
+    kurs_gefunden = False
     
-    try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        daten = get_numbers(soup)
-        
-        if daten and len(daten) >= 1:
-            # Aktuellen Kurs extrahieren (Komma zu Punkt für Berechnung)
-            aktueller_kurs = float(daten[0].replace(",", "."))
-            letzter_alarm_kurs = old_prices.get(wkn)
-
-            if letzter_alarm_kurs is None:
-                # Erster Durchlauf für diese Aktie überhaupt
-                new_prices[wkn] = aktueller_kurs
-                print(f"Erster Wert für {name}: {aktueller_kurs} EUR")
-            else:
-                # Momentum Berechnung
-                diff_prozent = ((aktueller_kurs - letzter_alarm_kurs) / letzter_alarm_kurs) * 100
+    # Probiere erst ISIN, dann WKN (US-Werte brauchen oft WKN, DE-Werte ISIN)
+    for identifier in [isin, wkn]:
+        url = f"https://www.ls-tc.de/de/aktie/{identifier}"
+        try:
+            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, "html.parser")
+                kurs_str = get_numbers(soup)
                 
-                print(f"{name}: {aktueller_kurs} EUR (Diff zu letztem Alarm: {diff_prozent:+.2f}%)")
+                if kurs_str:
+                    aktueller_kurs = float(kurs_str.replace(",", "."))
+                    letzter_alarm_kurs = old_prices.get(wkn)
 
-                if abs(diff_prozent) >= LIMIT_PERCENT:
-                    emoji = "🚀" if diff_prozent > 0 else "⚠️"
-                    nachricht = (f"{emoji} <b>MOMENTUM ALARM</b>\n\n"
-                                 f"Aktie: <b>{name}</b>\n"
-                                 f"Neuer Kurs: <b>{aktueller_kurs:.2f} EUR</b>\n"
-                                 f"Änderung: <b>{diff_prozent:+.2f}%</b> seit letzter Meldung")
+                    if letzter_alarm_kurs is None:
+                        new_prices[wkn] = aktueller_kurs
+                        print(f"✅ Initialwert {name}: {aktueller_kurs} EUR")
+                    else:
+                        diff_prozent = ((aktueller_kurs - letzter_alarm_kurs) / letzter_alarm_kurs) * 100
+                        print(f"📊 {name}: {aktueller_kurs} EUR ({diff_prozent:+.2f}%)")
+
+                        if abs(diff_prozent) >= LIMIT_PERCENT:
+                            emoji = "🚀" if diff_prozent > 0 else "⚠️"
+                            nachricht = (f"{emoji} <b>MOMENTUM ALARM</b>\n\n"
+                                         f"Aktie: <b>{name}</b>\n"
+                                         f"Neuer Kurs: <b>{aktueller_kurs:.2f} EUR</b>\n"
+                                         f"Änderung: <b>{diff_prozent:+.2f}%</b>")
+                            send_telegram(nachricht)
+                            new_prices[wkn] = aktueller_kurs
                     
-                    send_telegram(nachricht)
-                    # Neuen Referenzpunkt setzen
-                    new_prices[wkn] = aktueller_kurs
-                    print(f"🔔 Alarm gesendet für {name}")
+                    kurs_gefunden = True
+                    break # Identifier-Loop verlassen, da Kurs gefunden
+        except Exception as e:
+            continue
+            
+    if not kurs_gefunden:
+        print(f"❌ Kurs für {name} ({wkn}) konnte nicht gefunden werden.")
 
-    except Exception as e:
-        print(f"Fehler bei {name}: {e}")
-
-# 2. Neue Referenzwerte speichern
 save_prices(new_prices)
+print("🏁 Check beendet.")
