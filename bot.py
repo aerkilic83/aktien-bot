@@ -21,7 +21,8 @@ AKTIEN_DATEN = {
     "A2QA4J": ("Palantir", "US69608A1088"),
     "A0NC7B": ("Visa", "US92826C8394"),
     "581005": ("Deutsche Boerse", "DE0005810055"),
-    "703000": ("Rheinmetall", "DE0007030009")
+    "703000": ("Rheinmetall", "DE0007030009"),
+    "855681": ("Intel", "US4581401001")
 }
 
 def load_old_prices():
