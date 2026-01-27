@@ -22,7 +22,8 @@ AKTIEN_DATEN = {
     "A0NC7B": ("Visa", "US92826C8394"),
     "581005": ("Deutsche Boerse", "DE0005810055"),
     "703000": ("Rheinmetall", "DE0007030009"),
-    "855681": ("Intel", "US4581401001")
+    "855681": ("Intel", "US4581401001"),
+    "852552": ("Chevron", "US1667641005")
 }
 
 def load_old_prices():
