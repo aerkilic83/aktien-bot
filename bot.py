@@ -23,7 +23,7 @@ AKTIEN_DATEN = {
     "581005": ("Deutsche Boerse", "DE0005810055"),
     "840400": ("Allianz", "DE0008404005"),
     "A3DCXB": ("Constellation Energy", "US21037T1097"),
-    "000000": ("Bitcoin", "SN0000000BTC"),
+    "LSOBTC": ("Bitcoin", "LS000LSOBTC1"),
     "870747": ("Microsoft", "US5949181045")
 }
 
