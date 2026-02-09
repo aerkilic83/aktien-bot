@@ -17,13 +17,14 @@ AKTIEN_DATEN = {
     "A1E0HR": ("Gold-ETC", "DE000A1E0HR8"),
     "338643": ("Strategy", "US5949721099"),
     "918422": ("NVIDIA", "US67066G1040"),
-    "871460": ("Oracle", "US68389X1054"),
-    "A2QA4J": ("Palantir", "US69608A1088"),
+    "906866": ("Amazon", "US0231351067"),
+    "723610": ("Siemens", "DE0007236101"),
     "A0NC7B": ("Visa", "US92826C8394"),
     "581005": ("Deutsche Boerse", "DE0005810055"),
-    "703000": ("Rheinmetall", "DE0007030009"),
-    "855681": ("Intel", "US4581401001"),
-    "852552": ("Chevron", "US1667641005")
+    "840400": ("Allianz", "DE0008404005"),
+    "A3DCXB": ("Constellation Energy", "US21037T1097"),
+    "LS0BTC": ("Bitcoin", "LS000LSOBTC1"),
+    "870747": ("Microsoft", "US5949181045")
 }
 
 def load_old_prices():
